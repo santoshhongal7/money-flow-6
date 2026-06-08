@@ -57,7 +57,7 @@ export default function AddTransactionModal({ open, onClose, defaultPersonId }: 
       toast.success('Transaction added');
       reset();
       onClose();
-    } catch (e) {
+    } catch {
       toast.error('Failed to add transaction');
     }
   }
@@ -67,15 +67,25 @@ export default function AddTransactionModal({ open, onClose, defaultPersonId }: 
   const inputCls = 'w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-border px-4 py-4">
+
+      {/* Modal — flex column, capped height so button is always reachable */}
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="relative z-10 flex flex-col w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-xl"
+        style={{ maxHeight: '90dvh' }}
+      >
+        {/* Sticky header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-4">
           <h2 className="text-base font-semibold text-foreground">Add Transaction</h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted"><X size={18} /></button>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted">
+            <X size={18} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4">
+        {/* Scrollable fields */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {/* Type toggle */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Type</label>
@@ -85,13 +95,13 @@ export default function AddTransactionModal({ open, onClose, defaultPersonId }: 
                   key={t}
                   type="button"
                   onClick={() => setValue('type', t)}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                     type === t
                       ? t === 'borrow' ? 'bg-red-500 text-white' : 'bg-green-600 text-white'
                       : 'bg-background text-muted-foreground hover:bg-muted'
                   }`}
                 >
-                  {t === 'borrow' ? 'Borrow' : 'Lend'}
+                  {t === 'borrow' ? '↓ Borrow' : '↑ Lend'}
                 </button>
               ))}
             </div>
@@ -110,40 +120,67 @@ export default function AddTransactionModal({ open, onClose, defaultPersonId }: 
           {/* Amount */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Amount (₹)</label>
-            <input {...register('originalAmount')} type="number" step="0.01" placeholder="10000" className={inputCls} />
+            <input
+              {...register('originalAmount')}
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              placeholder="10000"
+              className={inputCls}
+            />
             {errors.originalAmount && <p className="mt-1 text-xs text-red-500">{errors.originalAmount.message}</p>}
           </div>
 
           {/* Rate */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Interest Rate (%/month)</label>
-            <input {...register('interestRate')} type="number" step="0.01" placeholder="2" className={inputCls} />
+            <input
+              {...register('interestRate')}
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              placeholder="2"
+              className={inputCls}
+            />
             {errors.interestRate && <p className="mt-1 text-xs text-red-500">{errors.interestRate.message}</p>}
           </div>
 
           {/* Start Date */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Start Date</label>
-            <input {...register('startDate')} type="date" max={format(new Date(), 'yyyy-MM-dd')} className={inputCls} />
+            <input
+              {...register('startDate')}
+              type="date"
+              max={format(new Date(), 'yyyy-MM-dd')}
+              className={inputCls}
+            />
             {errors.startDate && <p className="mt-1 text-xs text-red-500">{errors.startDate.message}</p>}
           </div>
 
           {/* Notes */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Notes (optional)</label>
-            <textarea {...register('notes')} rows={2} placeholder="Any notes…" className={inputCls + ' resize-none'} />
+            <textarea
+              {...register('notes')}
+              rows={3}
+              placeholder="Any notes…"
+              className={inputCls + ' resize-none'}
+            />
           </div>
+        </div>
 
+        {/* Sticky footer — always visible above keyboard */}
+        <div className="shrink-0 border-t border-border px-4 py-4">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
             {isSubmitting && <Loader2 size={16} className="animate-spin" />}
             Add Transaction
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

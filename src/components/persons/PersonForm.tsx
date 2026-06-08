@@ -30,12 +30,14 @@ export default function PersonForm({ open, onClose, person, onDelete }: Props) {
   });
 
   useEffect(() => {
-    if (person) {
-      reset({ name: person.name, phone: person.phone ?? '', email: person.email ?? '', notes: person.notes ?? '' });
-    } else {
-      reset({ name: '', phone: '', email: '', notes: '' });
+    if (open) {
+      if (person) {
+        reset({ name: person.name, phone: person.phone ?? '', email: person.email ?? '', notes: person.notes ?? '' });
+      } else {
+        reset({ name: '', phone: '', email: '', notes: '' });
+      }
     }
-  }, [person, reset]);
+  }, [open, person, reset]);
 
   async function onSubmit(data: FormData) {
     try {
@@ -65,13 +67,23 @@ export default function PersonForm({ open, onClose, person, onDelete }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-border px-4 py-4">
+
+      {/* Modal — flex column, capped at 90% screen height so it never goes taller than the viewport */}
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="relative z-10 flex flex-col w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-xl"
+        style={{ maxHeight: '90dvh' }}
+      >
+        {/* Sticky header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-4">
           <h2 className="text-base font-semibold text-foreground">{person ? 'Edit Person' : 'Add Person'}</h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted"><X size={18} /></button>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted">
+            <X size={18} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4">
+        {/* Scrollable fields */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Name *</label>
             <input {...register('name')} placeholder="Ramesh Kumar" className={inputCls} />
@@ -79,40 +91,41 @@ export default function PersonForm({ open, onClose, person, onDelete }: Props) {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Phone</label>
-            <input {...register('phone')} placeholder="9876543210" className={inputCls} />
+            <input {...register('phone')} type="tel" inputMode="numeric" placeholder="9876543210" className={inputCls} />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Email</label>
-            <input {...register('email')} type="email" placeholder="ramesh@example.com" className={inputCls} />
+            <input {...register('email')} type="email" inputMode="email" placeholder="ramesh@example.com" className={inputCls} />
             {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Notes</label>
-            <textarea {...register('notes')} rows={2} placeholder="Any notes…" className={inputCls + ' resize-none'} />
+            <textarea {...register('notes')} rows={3} placeholder="Any notes…" className={inputCls + ' resize-none'} />
           </div>
+        </div>
 
-          <div className="flex gap-3">
-            {person && onDelete && (
-              <button
-                type="button"
-                onClick={onDelete}
-                className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30 px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors"
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
-            )}
+        {/* Sticky footer — always visible above keyboard */}
+        <div className="shrink-0 flex gap-3 border-t border-border px-4 py-4">
+          {person && onDelete && (
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              type="button"
+              onClick={onDelete}
+              className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30 px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors"
             >
-              {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-              {person ? 'Save Changes' : 'Add Person'}
+              <Trash2 size={14} />
+              Delete
             </button>
-          </div>
-        </form>
-      </div>
+          )}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          >
+            {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+            {person ? 'Save Changes' : 'Add Person'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
