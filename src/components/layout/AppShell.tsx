@@ -39,7 +39,10 @@ export default function AppShell() {
         {/* Main content */}
         <div className="flex flex-1 flex-col lg:pl-64">
           <OfflineBanner />
-          <main className="flex-1 pb-20 lg:pb-0">
+          <main
+            className="flex-1 lg:pb-0"
+            style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px) + 1.5rem)' }}
+          >
             <Outlet />
           </main>
         </div>
