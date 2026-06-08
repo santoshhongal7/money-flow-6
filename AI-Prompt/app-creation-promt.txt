@@ -1,0 +1,84 @@
+
+Instruction to Claude
+You are my senior engineer architect and product partner. Your job has two phases — do NOT skip Phase 1.
+
+Create this full detailed promt in this project : /Volumes/Jai Shri Matha/Script_Workspace/money-flow-6/AI-Prompt/
+
+App brief — FILL THIS IN
+App name: [money-flow-6]
+One-line purpose: [MultiUser account manager , which helps you manage your money flow. Who is lending money to whom? and borrowing from whom etc]
+Core features (3–6): list the main things a user can do
+This money manager app can do multiple works, Its main job is to track dashboard of each user and show to them.
+[basically user is borrowing money/lending from some with persons, capture details of that person details like name, phone, email]
+[Some money is borrowed from same person or differnt persons multiple times, each time its borrowed/lent the Rate of interest is fixed for that amount alone and Interest is charged per month basis]
+[Dashboard showing Total Borrow/Lent amount , Per person basis borrowed/lent, monthly settlement statement for each Person borrowed/lent at Start of everymonth]
+Feature to send mail for each person who have provided email to send monthly statment,Example like person A borrowed 10000 at 1st Jan 2026 which is borrowed at 2% interest monthly,
+ and also 6000 borrowed at Mar 1st 2026 at 1%/Month .In statement details of each monthly interest Generated for each individual amount should be breaked down &
+ with Master details like started from when Total Amount Details at what interest.
+ Also able to generate full settle ment statement for closing any persons amounts with full detailed statement.
+ All statements are generated in PDF format.  And user can settle monthly user amount and check the box in Green to mention its interest payment is completed and it should send mail to respective person.
+the User of this APP is paying interest to person from whom he borrowed money. Similarly he can also see amount he should get monthly from the Person whom he lent.
+and similarly once he recieved amount he can check in his profile with green tick so that its completed
+Main entities / data: the "things" the app stores, e.g. Person Details, Borrow, Lent, Monthly Statements
+
+Key screens / views: [e.g. Dashboard, Detail, Settings, Auth/Login & Create account]
+Primary user action (the one thing they do most): [Borrow/Lend Money & Settle monthly Interest]
+Charts/visualizations needed? [yes — what / no]
+Anything special: offline support, notifications, sharing, roles, etc. — or "none"
+Brand / mood: [corporate + trustworthy]
+
+
+Phase 1 — Discovery (ask questions first)
+Before writing anything, interrogate the brief below for gaps, ambiguity, and unstated decisions. Ask me a focused round of clarifying questions covering at least these areas (skip an area only if the brief already answers it fully):
+
+Purpose & users: who exactly uses this, what problem it solves, the single most important outcome.
+Features: for each feature I listed, what it actually involves end-to-end; which features are must-have vs nice-to-have; anything I likely forgot.
+Data: the entities, their fields and types, how they relate, what's required vs optional, and what a realistic example record looks like.
+User flows & screens: the main journey step by step, what each screen needs to show, and what the empty/first-run state looks like.
+Edge cases & rules: validation rules, permissions/ownership, what happens on errors, limits, and anything time- or status-dependent.
+Scope boundaries: what is explicitly OUT of scope for v1.
+Rules for the questions:
+
+Group them by area with short headers; number each question so I can answer by number.
+Ask only questions whose answers would actually change the build — no filler.
+For each question, propose a sensible default in parentheses so I can just say "default" to accept it.
+If something is genuinely fine to assume, state the assumption instead of asking.
+Keep going until you have enough to design confidently — a thorough round is expected, not a token one.
+Wait for my answers. Do not produce the build prompt in Phase 1.
+
+Phase 2 — Build prompt
+Once I've answered, expand everything into a complete, build-ready prompt (not the app itself yet), using the output format at the bottom. Restate any assumptions you're still making.
+
+Quality bar (applies to every app from this template)
+Visuals: enterprise-grade, clean, consistent. Deliberate spacing scale, Inter or Geist typeface, light + dark mode via CSS variables. No generic AI look.
+Polish: skeleton loaders (not spinners), thoughtful empty states, an error boundary, accessible keyboard/focus behavior, subtle micro-interactions.
+Scale: ~100 users. Do NOT add scaling infrastructure (no SSR, Redis, CDN tuning, microservices, load testing). Spend all effort on UX and component polish.
+Cost: must run entirely on free tiers and be deployable to the public internet at no cost.
+Locked tech stack (do not change unless I say so)
+Framework: React 18 + TypeScript
+Build/PWA: Vite + vite-plugin-pwa (Workbox)
+Styling: Tailwind CSS + CSS variables
+Components: shadcn/ui (Radix-based)
+Forms: react-hook-form + zod
+Toasts: sonner · Command palette: cmdk · Icons: lucide-react
+State: Zustand (in-memory; Firestore is source of truth)
+Backend/DB: Firebase Firestore (Spark free tier)
+Auth: Firebase Auth (email/password + Google sign-in)
+Routing: React Router v6
+Dates: date-fns · Charts: Recharts · Animation: Framer Motion (motion/react)
+Drag & drop: @dnd-kit (only if needed)
+Hosting: Firebase Hosting (free) — or Cloudflare Pages / Vercel free tier
+Monitoring (optional): Sentry free tier
+
+Output format I want from you
+Assumptions you made (bullet list).
+Folder structure (tree).
+Firestore data model (collections → fields → types, plus security-rule notes).
+State shape (Zustand store outline).
+Component inventory (reusable components + which shadcn/ui primitives back them).
+Screen-by-screen breakdown (purpose, components, key interactions per screen).
+Acceptance criteria (a checklist that defines "done").
+
+Final output: Full detailed Document in .md file which can generate the Full APP
+
+
