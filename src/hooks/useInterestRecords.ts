@@ -23,19 +23,28 @@ export function useInterestRecords() {
 
   async function generateForAll() {
     if (!user) return;
+    // Guard against concurrent calls (e.g. auto-trigger racing with button press)
+    if (useInterestStore.getState().isGenerating) return;
+
     store.setGenerating(true);
     try {
+      // Always fetch fresh records from Firestore — the in-memory store may be
+      // stale if the initial DataLoader fetch hasn't finished yet, which causes
+      // the generator to think no record exists and create a duplicate.
+      const freshRecords = await getInterestRecords(user.uid);
+      store.setRecords(freshRecords);
+
       const activeTransactions = transactions.filter(t => t.status === 'active');
       for (const tx of activeTransactions) {
         const txRepayments = repayments.filter(r => r.transactionId === tx.id);
-        const existingRecords = store.records.filter(r => r.transactionId === tx.id);
-        const newRecords = await generateMissingInterestRecords(
+        const existingRecords = freshRecords.filter(r => r.transactionId === tx.id);
+        const newOrUpdated = await generateMissingInterestRecords(
           user.uid,
           tx,
           txRepayments,
           existingRecords
         );
-        if (newRecords.length > 0) store.upsertRecords(newRecords);
+        if (newOrUpdated.length > 0) store.upsertRecords(newOrUpdated);
       }
     } catch (e) {
       console.error('Error generating interest records', e);

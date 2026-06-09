@@ -96,7 +96,11 @@ export async function sendStatementEmail(opts: SendStatementOptions): Promise<vo
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error ?? `Server error ${res.status}`);
+    let message = `Server error ${res.status}`;
+    try {
+      const err = await res.json() as { error?: string };
+      if (err.error) message = err.error;
+    } catch { /* non-JSON body */ }
+    throw new Error(message);
   }
 }
