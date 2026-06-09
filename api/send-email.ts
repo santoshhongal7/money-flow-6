@@ -1,18 +1,17 @@
-import { Resend } from 'resend';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+// Uses Resend REST API directly — avoids ESM/CJS compatibility issues with the SDK.
+// fetch is available natively in Node.js 18+ (Vercel default runtime).
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  // Fail fast with a clear message if the API key is missing
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
-      error: 'RESEND_API_KEY is not set. Add it in Vercel → Project Settings → Environment Variables.',
+      error: 'RESEND_API_KEY is not configured. Add it in Vercel → Project Settings → Environment Variables.',
     });
   }
-
-  const resend = new Resend(apiKey);
 
   const { to, subject, html, pdfBase64, pdfFilename } = req.body as {
     to: string;
@@ -26,26 +25,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing required fields: to, subject, html' });
   }
 
-  // Resend expects attachment content as a Buffer, not a raw base64 string
-  const attachments = pdfBase64
-    ? [{ filename: pdfFilename ?? 'statement.pdf', content: Buffer.from(pdfBase64, 'base64') }]
-    : [];
+  // Resend REST API accepts base64 strings directly in attachments — no Buffer conversion needed.
+  const payload: Record<string, unknown> = {
+    from: process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev',
+    to,
+    subject,
+    html,
+  };
 
-  // "from" must be a verified Resend domain OR Resend's own test address
-  const from = process.env.RESEND_FROM_EMAIL ?? 'MoneyFlow <onboarding@resend.dev>';
+  if (pdfBase64) {
+    payload.attachments = [
+      { filename: pdfFilename ?? 'statement.pdf', content: pdfBase64 },
+    ];
+  }
 
   try {
-    const result = await resend.emails.send({ from, to, subject, html, attachments });
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-    if (result.error) {
-      // Resend returns errors in result.error rather than throwing in some cases
-      return res.status(400).json({ error: result.error.message });
+    const data = await response.json() as { id?: string; name?: string; message?: string };
+
+    if (!response.ok) {
+      const errMsg = data.message ?? data.name ?? `Resend API error ${response.status}`;
+      console.error('[send-email] Resend rejected:', errMsg);
+      return res.status(response.status).json({ error: errMsg });
     }
 
-    return res.status(200).json({ id: result.data?.id });
+    return res.status(200).json({ id: data.id });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('[send-email] Resend error:', msg);
+    console.error('[send-email] Unexpected error:', msg);
     return res.status(500).json({ error: msg });
   }
 }
