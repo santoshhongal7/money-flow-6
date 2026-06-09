@@ -4,7 +4,8 @@
   ],
   "functions": {
     "api/send-email.ts": {
-      "maxDuration": 10
+      "runtime": "nodejs20.x",
+      "maxDuration": 15
     }
   }
 }
