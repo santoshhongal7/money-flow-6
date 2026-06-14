@@ -60,7 +60,7 @@ function renderTransactionBlock(
   y: number,
   marginL: number,
   marginR: number,
-  accentHead: [number, number, number, number], // fillColor RGBA as [r,g,b] + textColor [r,g,b]
+  accentHead: [number, number, number],
 ): number {
   const pageWidth = doc.internal.pageSize.width;
   const txRepayments = monthRepayments.filter(r => r.transactionId === tx.id);
