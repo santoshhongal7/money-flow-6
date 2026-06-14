@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle, Circle, FileText, Send, Loader2 } from 'lucide-react';
+import { CheckCircle, Circle, FileText, Loader2, Download } from 'lucide-react';
 import TopBar from '../components/layout/TopBar';
 import MonthPicker from '../components/shared/MonthPicker';
 import EmptyState from '../components/shared/EmptyState';
@@ -10,17 +10,16 @@ import { useAuthStore } from '../stores/authStore';
 import { useUIStore } from '../stores/uiStore';
 import { formatINR, formatMonth } from '../lib/utils';
 import { generatePDFMonthlyStatement } from '../lib/pdf/monthlyStatement';
-import { sendStatementEmail } from '../lib/email/sendStatement';
 import { toast } from 'sonner';
 
 export default function StatementsPage() {
   const { selectedMonth, setSelectedMonth } = useUIStore();
   const { records, isGenerating, generateForAll, togglePaid } = useInterestRecords();
   const { persons } = usePersonsStore();
-  const { transactions } = useTransactionsStore();
+  const { transactions, repayments } = useTransactionsStore();
   const { profile, user } = useAuthStore();
   const [tab, setTab] = useState<'pay' | 'receive'>('pay');
-  const [sendingEmail, setSendingEmail] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     generateForAll();
@@ -40,46 +39,22 @@ export default function StatementsPage() {
   }
 
   async function handleDownloadPDF() {
+    setDownloading(true);
     try {
       await generatePDFMonthlyStatement({
         month: selectedMonth,
-        records: monthRecords,   // all records for the month, not just current tab
+        records: monthRecords,
         persons,
         transactions,
+        repayments,
         userName: profile?.displayName ?? 'User',
+        userEmail: user?.email ?? undefined,
       });
+      toast.success(`Statement downloaded for ${formatMonth(selectedMonth)}`);
     } catch {
       toast.error('Failed to generate PDF');
-    }
-  }
-
-  async function handleSendEmail() {
-    const email = user?.email;
-    if (!email) {
-      toast.error('No email address found for your account');
-      return;
-    }
-    if (monthRecords.length === 0) {
-      toast.error('No records to send for this month');
-      return;
-    }
-
-    setSendingEmail(true);
-    try {
-      await sendStatementEmail({
-        month: selectedMonth,
-        toEmail: email,
-        persons,
-        records: monthRecords,
-        transactions,
-        userName: profile?.displayName ?? 'User',
-      });
-      toast.success(`Statement sent to ${email}`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send email';
-      toast.error(msg);
     } finally {
-      setSendingEmail(false);
+      setDownloading(false);
     }
   }
 
@@ -195,31 +170,19 @@ export default function StatementsPage() {
           </div>
         )}
 
-        {/* Action buttons */}
-        {monthRecords.length > 0 && (
-          <div className="space-y-2">
-            <button
-              onClick={handleDownloadPDF}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              <FileText size={16} />
-              Download PDF — {formatMonth(selectedMonth)}
-            </button>
-
-            <button
-              onClick={handleSendEmail}
-              disabled={sendingEmail}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
-            >
-              {sendingEmail
-                ? <Loader2 size={16} className="animate-spin" />
-                : <Send size={16} />}
-              {sendingEmail
-                ? 'Sending…'
-                : `Email Statement to ${user?.email ?? 'your account'}`}
-            </button>
-          </div>
-        )}
+        {/* Download PDF button — always visible if there are any transactions or records */}
+        <button
+          onClick={handleDownloadPDF}
+          disabled={downloading}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
+        >
+          {downloading
+            ? <Loader2 size={16} className="animate-spin" />
+            : <Download size={16} />}
+          {downloading
+            ? 'Generating PDF…'
+            : `Download Statement — ${formatMonth(selectedMonth)}`}
+        </button>
       </div>
     </div>
   );
