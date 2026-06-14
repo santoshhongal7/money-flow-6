@@ -10,12 +10,12 @@ export function calculateMonthInterest(
   rate: number,
   targetMonth: string,
   startDate: Date,
-  today: Date = new Date()
+  today: Date = new Date(),
+  clearingDate?: Date
 ): { amount: number; isProRated: boolean } {
   const [year, month] = targetMonth.split('-').map(Number);
   const targetMonthStart = new Date(year, month - 1, 1);
   const startMonth = format(startOfMonth(startDate), 'yyyy-MM');
-  const currentMonth = format(startOfMonth(today), 'yyyy-MM');
 
   const fullMonthlyInterest = (principal * rate) / 100;
   const totalDays = getDaysInMonth(targetMonthStart);
@@ -27,19 +27,22 @@ export function calculateMonthInterest(
     const amount = parseFloat(
       ((fullMonthlyInterest * remainingDays) / totalDays).toFixed(2)
     );
-    return { amount, isProRated: true };
+    return { amount, isProRated: startDay !== 1 };
   }
 
-  // Pro-rate the current running month (only count days elapsed so far)
-  if (targetMonth === currentMonth) {
-    const elapsedDays = today.getDate();
-    const amount = parseFloat(
-      ((fullMonthlyInterest * elapsedDays) / totalDays).toFixed(2)
-    );
-    return { amount, isProRated: true };
+  // For account clearing/settlement: pro-rate the clearing month up to the clearing date
+  if (clearingDate) {
+    const clearingMonth = format(startOfMonth(clearingDate), 'yyyy-MM');
+    if (targetMonth === clearingMonth) {
+      const elapsedDays = clearingDate.getDate();
+      const amount = parseFloat(
+        ((fullMonthlyInterest * elapsedDays) / totalDays).toFixed(2)
+      );
+      return { amount, isProRated: true };
+    }
   }
 
-  // Past completed months — full interest
+  // Current month and all past completed months — full interest (current month due at month end)
   return { amount: parseFloat(fullMonthlyInterest.toFixed(2)), isProRated: false };
 }
 

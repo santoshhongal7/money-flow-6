@@ -48,7 +48,8 @@ export default function SettlementPage() {
     setGenerating(true);
     try {
       const existing = records.filter(r => r.transactionId === tx.id);
-      const newRecords = await generateMissingInterestRecords(user.uid, tx, txRepayments, existing);
+      const clearing = new Date(settlementDate + 'T00:00:00');
+      const newRecords = await generateMissingInterestRecords(user.uid, tx, txRepayments, existing, clearing);
       if (newRecords.length > 0) interestStore.addRecords(newRecords);
       toast.success('Records generated');
     } catch {

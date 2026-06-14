@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Plus, AlertCircle, TrendingDown, TrendingUp, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { Plus, AlertCircle, TrendingDown, TrendingUp, ArrowDownLeft, ArrowUpRight, FileText } from 'lucide-react';
 import TopBar from '../components/layout/TopBar';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { useTransactionsStore } from '../stores/transactionsStore';
@@ -8,6 +8,7 @@ import { formatINR, formatDate } from '../lib/utils';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import PersonAvatar from '../components/shared/PersonAvatar';
 import AddTransactionModal from '../components/transactions/AddTransactionModal';
+import MasterStatementModal from '../components/MasterStatementModal';
 import { useState } from 'react';
 
 interface StatCardProps {
@@ -37,6 +38,7 @@ export default function DashboardPage() {
   const { persons } = usePersonsStore();
   const navigate = useNavigate();
   const [addOpen, setAddOpen] = useState(false);
+  const [masterOpen, setMasterOpen] = useState(false);
 
   const recent = transactions.slice(0, 5);
 
@@ -97,6 +99,21 @@ export default function DashboardPage() {
           />
         </div>
 
+        {/* Master Statement */}
+        <button
+          onClick={() => setMasterOpen(true)}
+          className="flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <FileText size={18} className="text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold text-foreground">Master Statement</p>
+            <p className="text-xs text-muted-foreground">Full summary — all persons & transactions</p>
+          </div>
+          <span className="text-xs font-medium text-primary">PDF →</span>
+        </button>
+
         {/* Trend chart */}
         {stats.trendData.some(d => d.interestIn > 0 || d.interestOut > 0) && (
           <div className="rounded-xl border border-border bg-card p-4">
@@ -156,6 +173,7 @@ export default function DashboardPage() {
       </button>
 
       <AddTransactionModal open={addOpen} onClose={() => setAddOpen(false)} />
+      <MasterStatementModal open={masterOpen} onClose={() => setMasterOpen(false)} />
     </div>
   );
 }

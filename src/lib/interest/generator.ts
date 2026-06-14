@@ -7,7 +7,8 @@ export async function generateMissingInterestRecords(
   userId: string,
   transaction: Transaction,
   repayments: Repayment[],
-  existingRecords: InterestRecord[]
+  existingRecords: InterestRecord[],
+  clearingDate?: Date
 ): Promise<InterestRecord[]> {
   const today = new Date();
   const currentMonth = format(startOfMonth(today), 'yyyy-MM');
@@ -47,11 +48,12 @@ export async function generateMissingInterestRecords(
       transaction.interestRate,
       month,
       transaction.startDate,
-      today
+      today,
+      clearingDate
     );
 
     if (existing && isCurrentMonth) {
-      // Update the existing current-month record with today's pro-rated amount
+      // Update the existing current-month record (full month amount, or prorated if clearing)
       await updateInterestRecord(userId, existing.id, {
         principalAtMonth: principal,
         interestAmount: amount,
