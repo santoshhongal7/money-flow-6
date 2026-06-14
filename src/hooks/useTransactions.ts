@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useTransactionsStore } from '../stores/transactionsStore';
 import { useAuthStore } from '../stores/authStore';
+import { usePersonsStore } from '../stores/personsStore';
 import {
   getTransactions, createTransaction, updateTransaction, deleteTransaction
 } from '../lib/firestore/transactions';
@@ -13,14 +14,19 @@ import { toast } from 'sonner';
 export function useTransactions() {
   const { user } = useAuthStore();
   const store = useTransactionsStore();
+  const personsStore = usePersonsStore();
 
   useEffect(() => {
     if (!user) return;
     store.setLoading(true);
     Promise.all([getTransactions(user.uid), getRepayments(user.uid)])
       .then(([txs, reps]) => {
-        store.setTransactions(txs);
-        store.setRepayments(reps);
+        // Filter out data belonging to soft-deleted persons
+        const activeIds = new Set(personsStore.persons.map(p => p.id));
+        const visibleTxs = activeIds.size > 0 ? txs.filter(t => activeIds.has(t.personId)) : txs;
+        const visibleReps = activeIds.size > 0 ? reps.filter(r => activeIds.has(r.personId)) : reps;
+        store.setTransactions(visibleTxs);
+        store.setRepayments(visibleReps);
       })
       .catch((e) => store.setError(e.message))
       .finally(() => store.setLoading(false));

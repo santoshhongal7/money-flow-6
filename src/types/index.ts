@@ -21,6 +21,8 @@ export interface Person {
   phone?: string;
   email?: string;
   notes?: string;
+  isDeleted?: boolean;
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -33,7 +33,19 @@ export default function TransactionDetailPage() {
 
   const person = persons.find(p => p.id === tx.personId);
   const txRepayments = repayments.filter(r => r.transactionId === tx.id).sort((a, b) => a.date.getTime() - b.date.getTime());
-  const txInterest = records.filter(r => r.transactionId === tx.id).sort((a, b) => a.month.localeCompare(b.month));
+  // Settled transactions: only show current-year records (full history available in Statements/PDF).
+  // Active transactions: show all records.
+  const currentYear = new Date().getFullYear().toString();
+  const txInterest = records
+    .filter(r => {
+      if (r.transactionId !== tx.id) return false;
+      if (tx.status === 'settled') return r.month.startsWith(currentYear);
+      return true;
+    })
+    .sort((a, b) => a.month.localeCompare(b.month));
+  const hiddenSettledCount = tx.status === 'settled'
+    ? records.filter(r => r.transactionId === tx.id && !r.month.startsWith(currentYear)).length
+    : 0;
 
   async function handleGenerate() {
     if (!user) return;
@@ -125,6 +137,11 @@ export default function TransactionDetailPage() {
               {generating ? 'Generating…' : 'Generate'}
             </button>
           </div>
+          {hiddenSettledCount > 0 && (
+            <p className="px-4 py-2 text-xs text-muted-foreground bg-muted/40 text-center">
+              {hiddenSettledCount} older record{hiddenSettledCount > 1 ? 's' : ''} from previous years hidden — view full history in Statements.
+            </p>
+          )}
           {txInterest.length === 0 ? (
             <p className="px-4 py-4 text-sm text-muted-foreground">No interest records. Click Generate.</p>
           ) : (

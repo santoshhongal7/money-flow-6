@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useInterestStore } from '../stores/interestStore';
 import { useAuthStore } from '../stores/authStore';
 import { useTransactionsStore } from '../stores/transactionsStore';
+import { usePersonsStore } from '../stores/personsStore';
 import { getInterestRecords, updateInterestRecord } from '../lib/firestore/interestRecords';
 import { generateMissingInterestRecords } from '../lib/interest/generator';
 import { toast } from 'sonner';
@@ -10,12 +11,16 @@ export function useInterestRecords() {
   const { user } = useAuthStore();
   const store = useInterestStore();
   const { transactions, repayments } = useTransactionsStore();
+  const { persons } = usePersonsStore();
 
   useEffect(() => {
     if (!user) return;
     store.setLoading(true);
     getInterestRecords(user.uid)
-      .then(store.setRecords)
+      .then(records => {
+        const activeIds = new Set(persons.map(p => p.id));
+        store.setRecords(activeIds.size > 0 ? records.filter(r => activeIds.has(r.personId)) : records);
+      })
       .catch(() => {})
       .finally(() => store.setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps

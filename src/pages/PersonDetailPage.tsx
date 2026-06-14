@@ -7,10 +7,12 @@ import EmptyState from '../components/shared/EmptyState';
 import PersonForm from '../components/persons/PersonForm';
 import AddTransactionModal from '../components/transactions/AddTransactionModal';
 import { usePersonsStore } from '../stores/personsStore';
+import { usePersons } from '../hooks/usePersons';
 import { useTransactionsStore } from '../stores/transactionsStore';
 import { useInterestStore } from '../stores/interestStore';
 import { formatINR, formatDate } from '../lib/utils';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function PersonDetailPage() {
   const { personId } = useParams<{ personId: string }>();
@@ -20,6 +22,7 @@ export default function PersonDetailPage() {
   const [tab, setTab] = useState<'active' | 'settled'>('active');
 
   const { persons } = usePersonsStore();
+  const { removePerson } = usePersons();
   const { transactions } = useTransactionsStore();
   const { records } = useInterestStore();
 
@@ -147,6 +150,12 @@ export default function PersonDetailPage() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         person={person}
+        onDelete={async () => {
+          await removePerson(person.id);
+          toast.success('Person and all related data deleted');
+          setEditOpen(false);
+          navigate('/persons');
+        }}
       />
       <AddTransactionModal
         open={addTxOpen}

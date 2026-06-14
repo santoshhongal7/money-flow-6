@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { usePersonsStore } from '../stores/personsStore';
 import { useAuthStore } from '../stores/authStore';
+import { useTransactionsStore } from '../stores/transactionsStore';
+import { useInterestStore } from '../stores/interestStore';
 import {
-  getPersons, createPerson, updatePerson, deletePerson
+  getPersons, createPerson, updatePerson, softDeletePerson
 } from '../lib/firestore/persons';
 import type { Person } from '../types';
 import { toast } from 'sonner';
@@ -10,6 +12,8 @@ import { toast } from 'sonner';
 export function usePersons() {
   const { user } = useAuthStore();
   const store = usePersonsStore();
+  const txStore = useTransactionsStore();
+  const interestStore = useInterestStore();
 
   useEffect(() => {
     if (!user) return;
@@ -48,8 +52,12 @@ export function usePersons() {
   async function removePerson(personId: string) {
     if (!user) return;
     try {
-      await deletePerson(user.uid, personId);
+      // Soft-delete in Firestore — data is preserved but hidden
+      await softDeletePerson(user.uid, personId);
+      // Remove from in-memory stores so UI hides them immediately
       store.removePerson(personId);
+      txStore.removeByPersonId(personId);
+      interestStore.removeByPersonId(personId);
     } catch (e: unknown) {
       toast.error('Failed to delete person');
       throw e;

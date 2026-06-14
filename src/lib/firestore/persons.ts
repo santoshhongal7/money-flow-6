@@ -20,6 +20,8 @@ function docToPerson(id: string, data: Record<string, unknown>): Person {
     phone: data.phone as string | undefined,
     email: data.email as string | undefined,
     notes: data.notes as string | undefined,
+    isDeleted: (data.isDeleted as boolean | undefined) ?? false,
+    deletedAt: data.deletedAt ? toDate(data.deletedAt) : undefined,
     createdAt: toDate(data.createdAt),
     updatedAt: toDate(data.updatedAt),
   };
@@ -31,7 +33,9 @@ export async function getPersons(userId: string): Promise<Person[]> {
     orderBy('createdAt', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => docToPerson(d.id, d.data() as Record<string, unknown>));
+  return snap.docs
+    .map(d => docToPerson(d.id, d.data() as Record<string, unknown>))
+    .filter(p => !p.isDeleted);  // exclude soft-deleted persons
 }
 
 export async function createPerson(
@@ -66,6 +70,16 @@ export async function updatePerson(
   await updateDoc(doc(db, 'users', userId, 'persons', personId), payload);
 }
 
-export async function deletePerson(userId: string, personId: string): Promise<void> {
-  await deleteDoc(doc(db, 'users', userId, 'persons', personId));
+/**
+ * Soft-deletes a person — marks isDeleted: true in Firestore.
+ * All related transactions, repayments, and interest records are preserved
+ * in Firestore so the data can be recovered or audited later.
+ * The UI filters them out by cross-referencing the persons store.
+ */
+export async function softDeletePerson(userId: string, personId: string): Promise<void> {
+  await updateDoc(doc(db, 'users', userId, 'persons', personId), {
+    isDeleted: true,
+    deletedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
 }

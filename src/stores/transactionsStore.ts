@@ -10,6 +10,7 @@ interface TransactionsState {
   addTransaction: (tx: Transaction) => void;
   updateTransaction: (tx: Transaction) => void;
   removeTransaction: (id: string) => void;
+  removeByPersonId: (personId: string) => void;
   setRepayments: (r: Repayment[]) => void;
   addRepayment: (r: Repayment) => void;
   setLoading: (loading: boolean) => void;
@@ -27,6 +28,11 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
     set((s) => ({ transactions: s.transactions.map((t) => (t.id === tx.id ? tx : t)) })),
   removeTransaction: (id) =>
     set((s) => ({ transactions: s.transactions.filter((t) => t.id !== id) })),
+  removeByPersonId: (personId) =>
+    set((s) => ({
+      transactions: s.transactions.filter((t) => t.personId !== personId),
+      repayments: s.repayments.filter((r) => r.personId !== personId),
+    })),
   setRepayments: (repayments) => set({ repayments }),
   addRepayment: (r) => set((s) => ({ repayments: [r, ...s.repayments] })),
   setLoading: (isLoading) => set({ isLoading }),

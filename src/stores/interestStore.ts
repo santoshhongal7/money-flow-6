@@ -11,6 +11,7 @@ interface InterestState {
   upsertRecords: (records: InterestRecord[]) => void;
   markPaid: (id: string, paidDate: Date) => void;
   markUnpaid: (id: string) => void;
+  removeByPersonId: (personId: string) => void;
   setLoading: (loading: boolean) => void;
   setGenerating: (generating: boolean) => void;
 }
@@ -40,6 +41,8 @@ export const useInterestStore = create<InterestState>((set) => ({
         r.id === id ? { ...r, isPaid: false, paidDate: undefined } : r
       ),
     })),
+  removeByPersonId: (personId) =>
+    set((s) => ({ records: s.records.filter((r) => r.personId !== personId) })),
   setLoading: (isLoading) => set({ isLoading }),
   setGenerating: (isGenerating) => set({ isGenerating }),
 }));
